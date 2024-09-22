@@ -7,7 +7,7 @@ using namespace std;
 class BMP {
 private:
     int minimum, index, distance[53], stat[53];
-    int source;
+    int source , destination;
     int graph[53][53];  
     vector <string> stations;
 
@@ -93,10 +93,11 @@ public:
     void viewStation(int index);
     void updateStation(int index, string newName);
     void sourcestinput();
-    int mindistance(int distance[], bool stat[]);
     void dijkstra(int graph[53][53], int source);
+    void srcdsinput();
+    void dijkstrasrcds(int graph[53][53], int source ,int destination);
+    int mindistance(int distance[], bool stat[]);
 };
-
 
     void BMP::displayStations() {
         cout << "List of all stations:\n";
@@ -132,6 +133,47 @@ public:
             dijkstra(graph, source);
         } else {
             cout << "Invalid source index.\n";
+        }
+    }
+
+    void BMP::srcdsinput() {
+        displayStations();
+        cout<<"Enter source station : ";
+        cin>>source;
+        cout<<"Enter destination station :";
+        cin>>destination;
+         if (source >= 0 && source < stations.size() && destination>=0 && destination <stations.size()) {
+            dijkstrasrcds(graph, source ,destination);
+        } else {
+            cout << "Invalid source index.\n";
+        }        
+    }
+
+    void BMP::dijkstrasrcds(int graph[53][53], int source ,int destination) {
+        int distance[53];
+        bool stat[53];
+        for (int k = 0; k < stations.size(); k++) {
+            distance[k] = INT_MAX;
+            stat[k] = false;
+        }
+        distance[source] = 0;
+
+        for (int k = 0; k < stations.size(); k++) {
+            int m = mindistance(distance, stat);
+            stat[m] = true;
+            for (int i = 0; i < stations.size(); i++) {
+                if (!stat[i] && graph[m][i] && distance[m] != INT_MAX && distance[m] + graph[m][i] < distance[i])
+                    distance[i] = distance[m] + graph[m][i];
+            }
+        }
+
+        cout << "Minimum number of stations from " << stations[source] << " to  " <<stations[destination]<<"are : ";
+        for (int k = 0; k < stations.size(); k++) 
+        {
+            if(k==destination)
+                {
+                    cout<<distance[k];
+                }
         }
     }
 
@@ -177,7 +219,7 @@ int main() {
     
     while (true) {
         cout << "\nMenu";
-        cout<<"\n1. Display all stations\n2. View a station\n3. Update a station\n4. Find minimum number of stations from source st. to all other stations \n5. Exit\n";
+        cout<<"\n1. Display all stations\n2. View a station\n3. Update a station\n4. Find minimum number of stations from source st. to all other stations \n5  Find minimum number of stations from source to destination \n6. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -200,7 +242,11 @@ int main() {
             case 4:
                 b1.sourcestinput();
                 break;
+
             case 5:
+                b1.srcdsinput();
+                break;
+            case 6:
                 cout << "Exiting...\n";
                 return 0;
             default:
