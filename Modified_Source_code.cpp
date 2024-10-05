@@ -2,6 +2,7 @@
 #include <string>
 #include <climits>
 #include <vector>
+#include <stack>
 using namespace std;
 
 class BMP {
@@ -9,12 +10,12 @@ private:
     int minimum, index, distance[53], stat[53];
     int source , destination;
     int graph[53][53];  
+    int parent[53];
     vector <string> stations;
 
 public:
     BMP() {
         int temp_graph[53][53] = {
-               
 {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 {1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 {0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -92,12 +93,21 @@ public:
     void displayStations();
     void viewStation(int index);
     void updateStation(int index, string newName);
-    void sourcestinput();
-    void dijkstra(int graph[53][53], int source);
     void srcdsinput();
     void dijkstrasrcds(int graph[53][53], int source ,int destination);
     int mindistance(int distance[], bool stat[]);
+    void printPath(int parent[], int v, vector<string>& stations);
 };
+
+void BMP::printPath(int parent[], int v, vector<string>& stations) {
+    if (parent[v] == -1) {
+        cout << stations[v];
+        return;
+    }
+    printPath(parent, parent[v], stations);
+    cout << " -> " << stations[v];
+}
+
 
     void BMP::displayStations() {
         cout << "List of all stations:\n";
@@ -125,16 +135,6 @@ public:
         }
     }
 
-    void BMP::sourcestinput() {
-        displayStations(); 
-        cout << "Enter a source station index: ";
-        cin >> source;
-        if (source >= 0 && source < stations.size()) {
-            dijkstra(graph, source);
-        } else {
-            cout << "Invalid source index.\n";
-        }
-    }
 
     void BMP::srcdsinput() {
         displayStations();
@@ -149,67 +149,52 @@ public:
         }        
     }
 
-    void BMP::dijkstrasrcds(int graph[53][53], int source ,int destination) {
-        int distance[53];
-        bool stat[53];
-        for (int k = 0; k < stations.size(); k++) {
-            distance[k] = INT_MAX;
-            stat[k] = false;
-        }
-        distance[source] = 0;
+    void BMP::dijkstrasrcds(int graph[53][53], int source, int destination) {
+    int distance[53];
+    bool stat[53];
+    int parent[53];
+    for (int k = 0; k < stations.size(); k++) {
+        distance[k] = INT_MAX;
+        parent[k] = -1;  // Initialize parent to -1 instead of INT_MAX
+        stat[k] = false;
+    }
+    distance[source] = 0;
 
-        for (int k = 0; k < stations.size(); k++) {
-            int m = mindistance(distance, stat);
-            stat[m] = true;
-            for (int i = 0; i < stations.size(); i++) {
-                if (!stat[i] && graph[m][i] && distance[m] != INT_MAX && distance[m] + graph[m][i] < distance[i])
+    for (int k = 0; k < stations.size() - 1; k++) {
+        int m = mindistance(distance, stat);
+        stat[m] = true;
+        
+        for (int i = 0; i < stations.size(); i++) {
+            if (!stat[i] && graph[m][i] && 
+                distance[m] != INT_MAX && 
+                distance[m] + graph[m][i] < distance[i]) {
                     distance[i] = distance[m] + graph[m][i];
+                    parent[i] = m;  // Update parent inside the if condition
             }
-        }
-
-        cout << "Minimum number of stations from " << stations[source] << " to  " <<stations[destination]<<"are : ";
-        for (int k = 0; k < stations.size(); k++) 
-        {
-            if(k==destination)
-                {
-                    cout<<distance[k];
-                }
         }
     }
 
+    cout << "Minimum number of stations from " << stations[source] 
+         << " to " << stations[destination] << " are: ";
+    
+    if (distance[destination] == INT_MAX) {
+        cout << "No path exists" << endl;
+    } else {
+        cout << distance[destination] << endl;
+        cout << "Path: ";
+        printPath(parent, destination, stations);
+    }
+}
+
     int BMP::mindistance(int distance[], bool stat[]) {
-        int minimum = INT_MAX, index;
+        int minimum = INT_MAX, index = -1;
         for (int k = 0; k < stations.size(); k++) {
-            if (!stat[k] && distance[k] <= minimum) {
+            if (stat[k] == false && distance[k] <= minimum) {
                 minimum = distance[k];
                 index = k;
             }
         }
         return index;
-    }
-
-    void BMP::dijkstra(int graph[53][53], int source) {
-        int distance[53];
-        bool stat[53];
-        for (int k = 0; k < stations.size(); k++) {
-            distance[k] = INT_MAX;
-            stat[k] = false;
-        }
-        distance[source] = 0;
-
-        for (int k = 0; k < stations.size(); k++) {
-            int m = mindistance(distance, stat);
-            stat[m] = true;
-            for (int i = 0; i < stations.size(); i++) {
-                if (!stat[i] && graph[m][i] && distance[m] != INT_MAX && distance[m] + graph[m][i] < distance[i])
-                    distance[i] = distance[m] + graph[m][i];
-            }
-        }
-
-        cout << "Minimum number of stations from " << stations[source] << " to every other station:\n";
-        for (int k = 0; k < stations.size(); k++) {
-            cout << "Minimum stations from " << stations[source] << " to " << stations[k] << " are " << distance[k] << endl;
-        }
     }
 
 int main() { 
@@ -219,7 +204,7 @@ int main() {
     
     while (true) {
         cout << "\nMenu";
-        cout<<"\n1. Display all stations\n2. View a station\n3. Update a station\n4. Find minimum number of stations from source st. to all other stations \n5  Find minimum number of stations from source to destination \n6. Exit\n";
+        cout<<"\n1. Display all stations\n2. View a station\n3. Update a station\n5  Find minimum number of stations from source to destination \n6. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -239,14 +224,11 @@ int main() {
                 cin >> newName;
                 b1.updateStation(index, newName);
                 break;
-            case 4:
-                b1.sourcestinput();
-                break;
 
-            case 5:
+            case 4:
                 b1.srcdsinput();
                 break;
-            case 6:
+            case 5:
                 cout << "Exiting...\n";
                 return 0;
             default:
