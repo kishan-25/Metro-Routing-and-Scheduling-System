@@ -1,24 +1,31 @@
 #include <iostream>
-#include <string>
-#include <climits>
 #include <vector>
-#include <stack>
-#include <utility>
-#include<algorithm>
+#include <set>
+#include <map>
+#include <string>
+#include <cmath>
+#include <limits>
+#include <algorithm>
+#include <iomanip>
+#include<climits>
+
 using namespace std;
+
+struct SearchResult {
+        vector<int> path;
+        int totalCost;
+    };
 
 class BMP {
 private:
-    int minimum, index, distance[86], stat[86];
-    int source , destination;
-    int graph[86][86];  
-    int parent[86];
-    vector <string> stations;
-    int distance_graph[86][86];
+    vector<string> stations;
+    int distance_graph[86][86];  // For actual distances
+    int graph[86][86];           // For connectivity
+    vector<int> special_stations = {8, 11, 13, 17, 29, 67}; // Junction stations
 
 public:
     BMP() {
-        int temp_graph[86][86] = {
+       int temp_graph[86][86] = {
     {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -230,120 +237,132 @@ public:
             }
         }
     }
-    void displayStations();
+    int heuristic(int start, int goal);
+    void printPath(const vector<int>& path, int totalCost);
+    void displayStations() ;
     void viewStation(int index);
-    void srcdsinput();
-    void dijkstrasrcds(int graph[86][86], int source ,int destination);
-    int  mindistance(int distance[], bool stat[]);
-    void printPath(int parent[], int v, vector<string>& stations);
-    int min_distance(int distance[],bool stat[]);
-    void dijkstra(int graph[86][86],int source, int destination);
-};
+    void findPath();
+    SearchResult aStarSearch(int start, int goal);
+    };
 
-int BMP:: min_distance(int distance[],bool stat[])
-{
-    int minimum=INT_MAX,index;
-    for (int k=0;k<86;k++)
-    {
-        if(stat[k]==false&&distance[k]<=minimum)
-        {
-            minimum=distance[k];
-            index=k;
+    int BMP::heuristic(int start, int goal) {
+        // Using actual distances as heuristic
+        return distance_graph[start][goal];
+    }
+
+    SearchResult BMP::aStarSearch(int start, int goal) {
+        map<int, int> gScore;
+        map<int, int> fScore;
+        map<int, int> cameFrom;
+        set<int> openSet;
+        set<int> closedSet;
+
+        for (int i = 0; i < stations.size(); i++) {
+            gScore[i] = INT_MAX;
+            fScore[i] = INT_MAX;
         }
-    }
-    return index;
-}
 
-void BMP:: dijkstra(int graph[86][86],int source, int destination)
-{
-    int distance[86];
-    bool stat[86];
-    for(int k=0;k<86;k++)
-    {
-        distance[k]=INT_MAX;
-        stat[k]=false;
-    }
-    distance[source]=0;
+        gScore[start] = 0;
+        fScore[start] = heuristic(start, goal);
+        openSet.insert(start);
 
-    for(int k=0;k<86;k++)
-    {
-        int m=mindistance(distance,stat);
-        stat[m]=true;
-        for(int i=0;i<86;i++)
-        {
-            if(!stat[i]&&(graph[m][i]&&(distance[m]!=INT_MAX&&(distance[m]+graph[m][i]<distance[i]))))
-                distance[i]=distance[m]+graph[m][i];
+        while (!openSet.empty()) {
+            int current = -1;
+            int lowestF = INT_MAX;
+
+            for (int node : openSet) {
+                if (fScore[node] < lowestF) {
+                    lowestF = fScore[node];
+                    current = node;
+                }
+            }
+
+            if (current == goal) {
+                vector<int> path;
+                int curr = current;
+                while (cameFrom.find(curr) != cameFrom.end()) {
+                    path.push_back(curr);
+                    curr = cameFrom[curr];
+                }
+                path.push_back(start);
+                reverse(path.begin(), path.end());
+                return {path, gScore[goal]};
+            }
+
+            openSet.erase(current);
+            closedSet.insert(current);
+
+            for (int neighbor = 0; neighbor < stations.size(); neighbor++) {
+                if (graph[current][neighbor] == 0) continue;
+                if (closedSet.find(neighbor) != closedSet.end()) continue;
+
+                int tentativeGScore = gScore[current] + distance_graph[current][neighbor];
+
+                if (openSet.find(neighbor) == openSet.end()) {
+                    openSet.insert(neighbor);
+                } else if (tentativeGScore >= gScore[neighbor]) {
+                    continue;
+                }
+
+                cameFrom[neighbor] = current;
+                gScore[neighbor] = tentativeGScore;
+                fScore[neighbor] = gScore[neighbor] + heuristic(neighbor, goal);
+            }
         }
-    }
-  
-    for(int k=0;k<86;k++)
-    {
-       if(k==destination)
-       {
-        double dis = distance[k]/1000;
-        cout<<endl<<"Minimum distance from "<<" "<<stations[source]<<" "<<" to "<<stations[destination]<<" is "<<dis<<"km"<<endl;
-        double time = (dis/44)*60;
-        cout<<endl<<"Time to reach : "<<time<<" minutes"<<endl;
-       }
-    }
-}
 
-void BMP::printPath(int parent[], int v, vector<string>& stations) {
-    vector<int> specialStations = {8, 11, 13, 17, 29,67};
-    vector<string> path_stations;
-    vector<string> junctions;
-    
-    // Collect the path
-    vector<int> path;
-    int current = v;
-    while (current != -1) 
-    {
-        path.push_back(current);
-        current = parent[current];
+        throw runtime_error("No path found");
     }
-    reverse(path.begin(), path.end());
-    
-    // Print total stations
-    cout << endl<<"Minimum number of stations from " << stations[path.front()] 
-         << " to " << stations[path.back()] << " are: " << path.size() - 1 << endl;
-    
-    // Print complete path
-    cout << endl<<"Path: "<<endl;
-    for (int i = 0; i < path.size(); i++) {
-        if (i > 0) cout << " -> ";
-        cout << stations[path[i]];
-    }
-    cout << endl;
-    
-    // Collect junctions
-    for (int i = 0; i < path.size(); i++) 
-    {
-        if (find(specialStations.begin(), specialStations.end(), path[i]) != specialStations.end()) {
-            junctions.push_back(stations[path[i]]);
-        }
-    }
-    
-    // Print junctions if any
-    if (!junctions.empty()) {
-        cout << endl<<"You have to cross the junctions: "<<endl;
-        for (int i = 0; i < junctions.size(); i++) {
-            if (i > 0) cout << ", ";
-            cout << junctions[i];
+
+    void BMP::printPath(const vector<int>& path, int totalCost) {
+        vector<string> junctions;
+        
+        // Print total stations
+        cout << endl << "Minimum number of stations from " << stations[path.front()] 
+             << " to " << stations[path.back()] << " are: " << path.size() - 1 << endl;
+        
+        // Print complete path
+        cout << endl << "Path:" << endl;
+        for (int i = 0; i < path.size(); i++) {
+            if (i > 0) cout << " -> ";
+            cout << stations[path[i]];
         }
         cout << endl;
-    }
-    dijkstra(distance_graph,source,destination);
-}
+        
+        // Collect and print junctions
+        for (int station : path) {
+            if (find(special_stations.begin(), special_stations.end(), station) != special_stations.end()) {
+                junctions.push_back(stations[station]);
+            }
+        }
+        
+        if (!junctions.empty()) {
+            cout << endl << "You have to cross the junctions:" << endl;
+            for (int i = 0; i < junctions.size(); i++) {
+                if (i > 0) cout << ", ";
+                cout << junctions[i];
+            }
+            cout << endl;
+        }
 
-    void BMP::displayStations() 
-    {
+        // Print distance and time
+        double distance_km = totalCost / 1000.0;
+        cout << endl << "Minimum distance from " << stations[path.front()] 
+             << " to " << stations[path.back()] << " is " << fixed << setprecision(2) 
+             << distance_km << "km" << endl;
+        
+        double time_minutes = (distance_km / 44.0) * 60;
+        cout << endl << "Time to reach: " << fixed << setprecision(2) 
+             << time_minutes << " minutes" << endl;
+    }
+
+    void BMP::displayStations() {
         cout << "List of all stations:\n";
         int count = 0;
         for (int i = 0; i < stations.size(); i++) {
             cout << i << ". " << stations[i] << "\t";
             count++;
-            if(count%4==0)
-                cout<<endl;
+            if(count % 4 == 0)
+                cout << endl;
         }
         cout << endl;
     }
@@ -356,73 +375,39 @@ void BMP::printPath(int parent[], int v, vector<string>& stations) {
         }
     }
 
-    void BMP::srcdsinput() {
+    void BMP::findPath() {
         displayStations();
-        cout<<endl<<"Enter source station : ";
-        cin>>source;
-        cout<<"Enter destination station :";
-        cin>>destination;
-         if (source >= 0 && source < stations.size() && destination>=0 && destination <stations.size()) {
-            dijkstrasrcds(graph, source ,destination);
+        int source, destination;
+        cout << endl << "Enter source station: ";
+        cin >> source;
+        cout << "Enter destination station: ";
+        cin >> destination;
+
+        if (source >= 0 && source < stations.size() && 
+            destination >= 0 && destination < stations.size()) {
+            try {
+                SearchResult result = aStarSearch(source, destination);
+                printPath(result.path, result.totalCost);
+            } catch (const runtime_error& e) {
+                cout << e.what() << endl;
+            }
         } else {
-            cout << "Invalid index.\n";
-        }        
-    }
-
-    void BMP::dijkstrasrcds(int graph[86][86], int source, int destination) {
-    int distance[86];
-    bool stat[86];
-    int parent[86];
-    for (int k = 0; k < stations.size(); k++) {
-        distance[k] = INT_MAX;
-        parent[k] = -1; 
-        stat[k] = false;
-    }
-    distance[source] = 0;
-
-    for (int k = 0; k < stations.size() - 1; k++) {
-        int m = mindistance(distance, stat);
-        stat[m] = true;
-        
-        for (int i = 0; i < stations.size(); i++) {
-            if (!stat[i] && graph[m][i] && 
-                distance[m] != INT_MAX && 
-                distance[m] + graph[m][i] < distance[i]) {
-                    distance[i] = distance[m] + graph[m][i];
-                    parent[i] = m; 
-            }
+            cout << "Invalid station index.\n";
         }
     }
 
-    if (distance[destination] == INT_MAX) {
-        cout << "No path exists" << endl;
-    } else {
-        printPath(parent, destination, stations);
-    }
-}
-
-    int BMP::mindistance(int distance[], bool stat[]) {
-        int minimum = INT_MAX, index = -1;
-        for (int k = 0; k < stations.size(); k++) {
-            if (stat[k] == false && distance[k] <= minimum) {
-                minimum = distance[k];
-                index = k;
-            }
-        }
-        return index;
-    }
-
-int main() { 
+int main() {
     BMP b1;
     int choice, index;
-    string newStation, newName;
     
     while (true) {
         cout << "\nMenu";
-        cout<<"\n1. Display all stations\n";
-        cout<<"2. View a station\n";
-        cout<<"3  Find minimum number of \n a.stations \t b. Path \t c. Junctions to cross  \t d.Distance  \t e. Time \n from source to destination \n";
-        cout<<"4. Exit\n";
+        cout << "\n1. Display all stations";
+        cout << "\n2. View a station";
+        cout << "\n3. Find minimum number of:";
+        cout << "\n   a. stations\n   b. Path\n   c. Junctions to cross";
+        cout << "\n   d. Distance\n   e. Time\n   from source to destination";
+        cout << "\n4. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -436,7 +421,7 @@ int main() {
                 b1.viewStation(index);
                 break;
             case 3:
-                b1.srcdsinput();
+                b1.findPath();
                 break;
             case 4:
                 cout << "Program Terminated\n";
