@@ -16,9 +16,12 @@ This project aims to enhance metro transportation efficiency by integrating adva
 - **Scheduling Techniques:** Constraint Programming
 - **Graph Processing:** Metro network representation using nodes and edges
 
-## System Architecture
+## Bhopal Metro Map
 
 ![System Architecture](Images/metromap.png)
+
+## System Architecture
+
 1. **Pathfinding Module:**
    - Accepts user input for source and destination.
    - Uses Dijkstra’s Algorithm for shortest path calculation.
