@@ -35,20 +35,6 @@ This project aims to enhance metro transportation efficiency by integrating adva
    - Provides route details, estimated travel time, and required line changes.
    - Displays station connectivity and optimal routes.
 
-## How to Run the Project
-```bash
-# Clone the repository
-git clone <repository_url>
-
-# Navigate to the project directory
-cd <project_directory>
-
-# Compile the C++ program
-g++ -o metro_scheduler metro_scheduler.cpp
-
-# Run the program
-./metro_scheduler
-```
 
 ## Future Enhancements
 - **Real-time Train Tracking:** Incorporate live updates to dynamically adjust scheduling.
