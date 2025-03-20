@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <set>
+#include <set> 
 #include <map>
 #include <string>
 #include <cmath>
@@ -17,11 +17,11 @@ struct SearchResult {
     };
 
 class BMP {
-private:
+private:  
     vector<string> stations;
     int distance_graph[86][86];  // For actual distances
     int graph[86][86];           // For connectivity
-    vector<int> special_stations = {8, 11, 13, 17, 29, 67}; // Junction stations
+    vector<int> special_stations = {4,8, 11, 13, 17, 29, 67}; // Junction stations
 
 public:
     BMP() {
@@ -207,8 +207,8 @@ public:
         string temp_stations[86] = {
         "Bairagarh","Bairagarh Stadium","Hemu Kalani","Hala Pura Bus Stand","Lal Ghati Square","Idgarh Hills", 
         "Collectorate","Cambridge School MG Hospital","Curfew Wali Mata Mandir","Kamala Park","Polytechnic Square" 
-        ,/*11*/"Roshanpura Square","TT Nagar Stadium","Mata Mandir","Jain Mandir","Sharda Mandir","Nutan College",
-        /*17*/"Mansarovar Complex/ HBJ Station","Khushabhau Thakrey ISBT","Anna Nagar","Carmel Convent",
+        ,"Roshanpura Square","TT Nagar Stadium","Mata Mandir","Jain Mandir","Sharda Mandir","Nutan College",
+        "Mansarovar Complex/ HBJ Station","Khushabhau Thakrey ISBT","Anna Nagar","Carmel Convent",
         "Piplani Gurdwara Square","Mahatma Gandhi Square","Awadhpuri",
         //Line 1 end Line 2 start
         "Karond Circle","Krishi Upaj Mandi","DIG Bungalow","Sindhi Colony","Nandra Bus Stand", 
@@ -222,7 +222,7 @@ public:
         "IIPM SarvadhaM","Bhoj University (Chunnabhatti)","Sahapura Lake", "Ekant Park","Panchsheel Nagar Bus Stop","MACT Square", 
         "Jumerati Road","Krishna Campus","Ashok Garden Auto Stand",
         //Line 4 end Line 5 start
-        "Bhadbhada Square","Depot Square","Jawahar Chowk","Minto Hall","Lily Talkies",/*67*/"Pul Bogda","Prabhat Square",
+        "Bhadbhada Square","Depot Square","Jawahar Chowk","Minto Hall","Lily Talkies","Pul Bogda","Prabhat Square",
         "Govindpura","Govindpura End Area","J.K.Road","Indrapuri","Piplani (BHEL Township)","Ratnagiri Tiraha", 
         //Line 5 end Line 6 start
         "RRL","BU University","Bagsewania Bus Stop","Ashima The Lake City Mall","Sri Ram Colony","C21 Mall", 
@@ -356,16 +356,36 @@ public:
     }
 
     void BMP::displayStations() {
-        cout << "List of all stations:\n";
-        int count = 0;
-        for (int i = 0; i < stations.size(); i++) {
-            cout << i << ". " << stations[i] << "\t";
-            count++;
-            if(count % 4 == 0)
-                cout << endl;
+    cout << "\nList of all stations:\n" << endl;
+    int count = stations.size();
+    int maxWidth = 30;  // Maximum width for each column
+    int columns = 3;    // Number of columns in the table
+    
+    // Print header line
+    string headerLine = string(maxWidth * columns + columns * 4, '-');
+    cout << headerLine << endl;
+
+    // Display stations in rows and columns
+    for (int i = 0; i < count; i += columns) {
+        for (int j = 0; j < columns && (i + j) < count; j++) {
+            // Create the station entry with index
+            string entry = to_string(i + j + 1) + ". " + stations[i + j];
+            
+            // Pad or truncate the entry to maintain alignment
+            if (entry.length() > maxWidth) {
+                entry = entry.substr(0, maxWidth - 3) + "...";
+            } else {
+                entry.append(maxWidth - entry.length(), ' ');
+            }
+            
+            cout << "| " << entry << " ";
         }
-        cout << endl;
+        cout << "|" << endl;
+        cout << headerLine << endl;
     }
+    cout << endl;
+}
+
 
     void BMP::viewStation(int index) {
         if (index >= 0 && index < stations.size()) {

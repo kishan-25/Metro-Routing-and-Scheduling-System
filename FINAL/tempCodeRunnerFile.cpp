@@ -1,0 +1,1 @@
+    vector<int> special_stations = {4,8, 11, 13, 17, 29, 67};
